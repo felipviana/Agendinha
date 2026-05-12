@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Tipo de Trabalho</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script>
+        (function () {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/theme.css?v=20260427-header4">
+</head>
+
+<body>
+    <div id="header"></div>
+    <div id="toast-root"></div>
+
+    <main class="container app-shell">
+        <section class="page-hero">
+            <span class="page-eyebrow">Ajuste visual</span>
+            <h1 class="page-title">Ajuste a categoria</h1>
+            <p class="page-subtitle">Pode alterar o que quiser :)</p>
+        </section>
+
+        <section class="section-card">
+            <div class="card-body">
+                <form id="workTypeForm">
+                    <div class="form-section">
+                        <h2 class="form-section-title">Detalhes da categoria</h2>
+                        <p class="form-section-copy">Mantenha uma nomenclatura curta e uma cor coerente com a rotina
+                            dessa pessoa.</p>
+
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Nome</label>
+                            <input type="text" id="name" class="form-control" required>
+                            <div class="invalid-feedback d-block" id="error-name"></div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Descrição</label>
+                            <textarea id="description" class="form-control" rows="4"></textarea>
+                            <div class="invalid-feedback d-block" id="error-description"></div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="color" class="form-label">Cor</label>
+                            <input type="color" id="color" class="form-control form-control-color" required>
+                            <div class="invalid-feedback d-block" id="error-color"></div>
+                            <div class="form-text" id="colorWarning"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" id="updateButton">Atualizar categoria</button>
+                        <a href="index.html" class="btn btn-secondary">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <script src="../assets/js/auth.js?v=20260427-header4"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="../assets/js/theme.js?v=20260427-header4"></script>
+    <script src="../assets/js/ui.js?v=20260427-header4"></script>
+    <script>
+        const API_URL = 'http://127.0.0.1:8000/api/work-types';
+        let existingWorkTypes = [];
+        let currentWorkTypeId = null;
+
+        function getIdFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('id');
+        }
+
+        function clearWorkTypeErrors() {
+            $('#name, #description, #color').removeClass('is-invalid');
+            $('#error-name').text('');
+            $('#error-description').text('');
+            $('#error-color').text('');
+            $('#colorWarning').text('').removeClass('text-warning');
+        }
+
+        function setWorkTypeFieldError(fieldId, message) {
+            $(`#${fieldId}`).addClass('is-invalid');
+            $(`#error-${fieldId}`).text(message);
+        }
+
+        function validateWorkTypeForm() {
+            clearWorkTypeErrors();
+
+            let isValid = true;
+
+            const name = $('#name').val().trim();
+            const color = $('#color').val();
+
+            if (!name) {
+                setWorkTypeFieldError('name', 'Informe o nome do tipo de trabalho.');
+                isValid = false;
+            }
+
+            if (!color) {
+                setWorkTypeFieldError('color', 'Informe uma cor.');
+                isValid = false;
+            }
+
+            return isValid;
+        }
+
+        function hexToRgb(hex) {
+            const cleaned = hex.replace('#', '');
+
+            return {
+                r: parseInt(cleaned.substring(0, 2), 16),
+                g: parseInt(cleaned.substring(2, 4), 16),
+                b: parseInt(cleaned.substring(4, 6), 16)
+            };
+        }
+
+        function colorDistance(hex1, hex2) {
+            const c1 = hexToRgb(hex1);
+            const c2 = hexToRgb(hex2);
+
+            return Math.sqrt(
+                Math.pow(c1.r - c2.r, 2) +
+                Math.pow(c1.g - c2.g, 2) +
+                Math.pow(c1.b - c2.b, 2)
+            );
+        }
+
+        function checkSimilarColorWarning() {
+            const selectedColor = $('#color').val();
+
+            if (!selectedColor || !existingWorkTypes.length) {
+                $('#colorWarning').text('').removeClass('text-warning');
+                return;
+            }
+
+            const similarWorkType = existingWorkTypes.find(function (workType) {
+                if (!workType.color) return false;
+                if (String(workType.id) === String(currentWorkTypeId)) return false;
+
+                return colorDistance(selectedColor, workType.color) < 40;
+            });
+
+            if (similarWorkType) {
+                $('#colorWarning')
+                    .text(`Aviso: a cor escolhida é bem próxima da usada em "${similarWorkType.name}".`)
+                    .addClass('text-warning');
+            } else {
+                $('#colorWarning').text('').removeClass('text-warning');
+            }
+        }
+
+        function loadExistingWorkTypes() {
+            $.ajax({
+                url: API_URL,
+                method: 'GET',
+                headers: getAuthHeaders(),
+                success: function (response) {
+                    existingWorkTypes = response || [];
+                    checkSimilarColorWarning();
+                }
+            });
+        }
+
+        function loadWorkType() {
+            if (!currentWorkTypeId) {
+                showAlert('ID do tipo de trabalho não informado.', 'danger');
+                return;
+            }
+
+            $.ajax({
+                url: `${API_URL}/${currentWorkTypeId}`,
+                method: 'GET',
+                headers: getAuthHeaders(),
+                success: function (workType) {
+                    $('#name').val(workType.name ?? '');
+                    $('#description').val(workType.description ?? '');
+                    $('#color').val(workType.color ?? '#3B82F6');
+                    checkSimilarColorWarning();
+                },
+                error: function (xhr) {
+                    if (xhr.responseJSON?.message) {
+                        showAlert(xhr.responseJSON.message, 'danger');
+                    } else {
+                        showAlert('Erro ao carregar os dados do tipo de trabalho.', 'danger');
+                    }
+                }
+            });
+        }
+
+        $(document).on('input change', '#color', function () {
+            checkSimilarColorWarning();
+        });
+
+        $('#workTypeForm').on('submit', function (e) {
+            e.preventDefault();
+
+            clearWorkTypeErrors();
+
+            if (!validateWorkTypeForm()) {
+                return;
+            }
+
+            if (!currentWorkTypeId) {
+                showAlert('ID do tipo de trabalho não informado.', 'danger');
+                return;
+            }
+
+            $('#updateButton').prop('disabled', true).text('Atualizando...');
+
+            $.ajax({
+                url: `${API_URL}/${currentWorkTypeId}`,
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                data: {
+                    name: $('#name').val(),
+                    description: $('#description').val(),
+                    color: $('#color').val()
+                },
+                success: function (response) {
+                    showAlert(response.message, 'success');
+
+                    setTimeout(function () {
+                        window.location.href = 'index.html';
+                    }, 700);
+                },
+                error: function (xhr) {
+                    $('#updateButton').prop('disabled', false).text('Atualizar categoria');
+
+                    if (xhr.responseJSON?.errors) {
+                        const errors = xhr.responseJSON.errors;
+
+                        Object.keys(errors).forEach(function (field) {
+                            const message = errors[field][0];
+
+                            if (field === 'name' || field === 'description' || field === 'color') {
+                                setWorkTypeFieldError(field, message);
+                            }
+                        });
+
+                        showAlert('Corrija os campos destacados.', 'danger');
+                        return;
+                    }
+
+                    if (xhr.responseJSON?.message) {
+                        showAlert(xhr.responseJSON.message, 'danger');
+                        return;
+                    }
+
+                    showAlert('Erro ao atualizar tipo de trabalho.', 'danger');
+                }
+            });
+        });
+
+        $(document).ready(function () {
+            validateSession(function () {
+                initGlobalUI('work-types');
+
+                currentWorkTypeId = getIdFromUrl();
+
+                if (!currentWorkTypeId) {
+                    showAlert('ID do tipo de trabalho não informado.', 'danger');
+                    return;
+                }
+
+                loadExistingWorkTypes();
+                loadWorkType();
+                showPageContent();
+            });
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

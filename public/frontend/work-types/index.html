@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Tipos de Trabalho</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script>
+        (function () {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/theme.css?v=20260427-header4">
+</head>
+
+<body>
+    <div id="header"></div>
+    <div id="toast-root"></div>
+
+    <main class="container app-shell">
+        <section class="page-hero">
+            <span class="page-eyebrow">Categorias visuais</span>
+            <h1 class="page-title">Defina cores que ajudem a reconhecer cada tipo de trabalho de primeira.</h1>
+            <p class="page-subtitle">Essas categorias aparecem na lista e no calendario para facilitar associacao
+                rapida.</p>
+            <div class="hero-actions">
+                <a href="create.html" class="btn btn-primary">Novo tipo de trabalho</a>
+            </div>
+        </section>
+
+        <section class="section-card table-shell">
+            <div class="card-body">
+                <div class="section-heading">
+                    <div>
+                        <div class="section-kicker">Biblioteca de cores</div>
+                        <h2 class="section-title">Categorias cadastradas</h2>
+                        <p class="section-copy">Use nomes curtos e cores distintas para o calendario ficar mais legivel
+                            no dia a dia.</p>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Nome</th>
+                                <th>Descricao</th>
+                                <th>Cor</th>
+                                <th style="width: 220px;">Acoes</th>
+                            </tr>
+                        </thead>
+                        <tbody id="workTypesTableBody">
+                            <tr>
+                                <td colspan="4" class="text-center">Carregando...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="../assets/js/auth.js?v=20260427-header4"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="../assets/js/theme.js?v=20260427-header4"></script>
+    <script src="../assets/js/ui.js?v=20260427-header4"></script>
+    <script>
+        const API_URL = 'http://127.0.0.1:8000/api/work-types';
+
+        function getActionIconSvg(type) {
+            if (type === 'edit') {
+                return `
+                    <span class="ui-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="m4 20 4.2-1 9.4-9.4a2.1 2.1 0 0 0 0-3L16.4 5a2.1 2.1 0 0 0-3 0L4 14.4 3 18.6 4 20Z"></path>
+                            <path d="M12.8 5.6 18.4 11.2"></path>
+                        </svg>
+                    </span>
+                `;
+            }
+
+            return `
+                <span class="ui-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M5 7.5h14"></path>
+                        <path d="M9.5 4.5h5"></path>
+                        <path d="M8 7.5v11a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-11"></path>
+                        <path d="M10 10.5v6M14 10.5v6"></path>
+                    </svg>
+                </span>
+            `;
+        }
+
+        function decorateWorkTypeActionButtons() {
+            $('#workTypesTableBody a.btn-warning').each(function () {
+                $(this)
+                    .removeClass('btn-warning')
+                    .addClass('action-icon-btn action-icon-btn-edit')
+                    .attr('title', 'Editar categoria')
+                    .attr('aria-label', 'Editar categoria')
+                    .html(getActionIconSvg('edit'));
+            });
+
+            $('#workTypesTableBody button.btn-delete').each(function () {
+                $(this)
+                    .removeClass('btn-danger')
+                    .addClass('action-icon-btn action-icon-btn-danger')
+                    .attr('title', 'Excluir categoria')
+                    .attr('aria-label', 'Excluir categoria')
+                    .html(getActionIconSvg('delete'));
+            });
+        }
+
+        function loadWorkTypes() {
+            $.ajax({
+                url: API_URL,
+                method: 'GET',
+                headers: getAuthHeaders(),
+                success: function (response) {
+                    let rows = '';
+
+                    if (!response.length) {
+                        rows = `
+                    <tr>
+                        <td colspan="4" class="text-center">Nenhum tipo de trabalho cadastrado.</td>
+                    </tr>
+                `;
+                    } else {
+                        response.forEach(function (workType) {
+                            rows += `
+                        <tr>
+                            <td>${workType.name ?? '-'}</td>
+                            <td>${workType.description ?? '-'}</td>
+                            <td>
+                                <span style="
+                                    display:inline-block;
+                                    width:24px;
+                                    height:24px;
+                                    border-radius:6px;
+                                    background:${workType.color};
+                                    border:1px solid rgba(0,0,0,0.1);
+                                "></span>
+                                <span class="ms-2">${workType.color}</span>
+                            </td>
+                            <td class="d-flex gap-2">
+                                <a href="edit.html?id=${workType.id}" class="btn btn-warning btn-sm">Editar</a>
+                                <button class="btn btn-danger btn-sm btn-delete" data-id="${workType.id}">Excluir</button>
+                            </td>
+                        </tr>
+                    `;
+                        });
+                    }
+
+                    $('#workTypesTableBody').html(rows);
+                },
+                error: function (xhr) {
+                    const message = xhr.responseJSON?.message || 'Erro ao carregar os tipos de trabalho.';
+
+                    $('#workTypesTableBody').html(`
+                <tr>
+                    <td colspan="4" class="text-center text-danger">${message}</td>
+                </tr>
+            `);
+
+                    showAlert(message, 'danger');
+                }
+            });
+        }
+
+        $(document).on('click', '.btn-delete', function () {
+            const id = $(this).data('id');
+
+            if (!confirm('Deseja excluir este tipo de trabalho?')) {
+                return;
+            }
+
+            $.ajax({
+                url: `${API_URL}/${id}`,
+                method: 'DELETE',
+                headers: getAuthHeaders(),
+                success: function (response) {
+                    showAlert(response.message, 'success');
+                    loadWorkTypes();
+                },
+                error: function (xhr) {
+                    const message = getErrorMessage(xhr, 'Erro ao excluir tipo de trabalho.');
+                    console.log('message final:', message);
+                    showAlert(message, 'danger');
+                }
+            });
+        });
+
+        $(document).ready(function () {
+            validateSession(function () {
+                initGlobalUI('work-types');
+                loadWorkTypes();
+            });
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

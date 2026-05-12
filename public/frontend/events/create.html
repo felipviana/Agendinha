@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Novo Agendamento</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script>
+        (function () {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/theme.css?v=20260427-header4">
+</head>
+
+<body>
+    <div id="header"></div>
+    <div id="toast-root"></div>
+
+    <main class="container app-shell">
+        <section class="page-hero">
+            <span class="page-eyebrow">Novo compromisso</span>
+            <h1 class="page-title">Monte um agendamento que seja facil de revisar depois.</h1>
+            <p class="page-subtitle">Os campos foram organizados em blocos para diminuir cansaco visual e deixar mais
+                claro o que e essencial agora e o que ajuda no planejamento futuro.</p>
+        </section>
+
+        <section class="section-card">
+            <div class="card-body">
+                <form id="eventForm">
+                    <div class="form-section">
+                        <h2 class="form-section-title">Informacoes principais</h2>
+                        <p class="form-section-copy">Comece pelo que identifica o compromisso e faz ele aparecer bem na
+                            agenda.</p>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="work_type_id" class="form-label">Tipo de Trabalho</label>
+                                <select id="work_type_id" class="form-select" required>
+                                    <option value="">Selecione</option>
+                                </select>
+                                <div class="invalid-feedback d-block" id="error-work_type_id"></div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="schedule_type" class="form-label">Tipo de Agendamento</label>
+                                <select id="schedule_type" class="form-select" required>
+                                    <option value="">Selecione</option>
+                                    <option value="evento">Evento</option>
+                                    <option value="entrega">Entrega</option>
+                                    <option value="retirada">Retirada</option>
+                                </select>
+                                <div class="invalid-feedback d-block" id="error-schedule_type"></div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Titulo</label>
+                            <input type="text" id="title" class="form-control" required>
+                            <div class="invalid-feedback d-block" id="error-title"></div>
+                        </div>
+
+                        <div class="mb-0">
+                            <label for="description" class="form-label">Descricao</label>
+                            <textarea id="description" class="form-control" rows="4"></textarea>
+                            <div class="invalid-feedback d-block" id="error-description"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h2 class="form-section-title">Quando e onde acontece</h2>
+                        <p class="form-section-copy">Esses dados ajudam a visualizar o fluxo do dia e evitar
+                            esquecimentos.</p>
+
+                        <div class="row">
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="is_recurring" value="1">
+                                <label class="form-check-label" for="is_recurring">Agendamento recorrente</label>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="scheduled_date" class="form-label">Data</label>
+                                <input type="date" id="scheduled_date" class="form-control">
+                                <div class="invalid-feedback d-block" id="error-scheduled_date"></div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="status" class="form-label">Status</label>
+                                <select id="status" class="form-select" required>
+                                    <option value="">Selecione</option>
+                                    <option value="pendente">Pendente</option>
+                                    <option value="confirmado">Confirmado</option>
+                                    <option value="cancelado">Cancelado</option>
+                                    <option value="concluido">Concluido</option>
+                                </select>
+                                <div class="invalid-feedback d-block" id="error-status"></div>
+                            </div>
+                        </div>
+
+                        <div class="row" id="timeFieldsWrapper">
+                            <div class="col-md-6 mb-3">
+                                <label for="start_time" class="form-label">Hora Inicial</label>
+                                <input type="time" id="start_time" class="form-control">
+                                <div class="invalid-feedback d-block" id="error-start_time"></div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="end_time" class="form-label">Hora Final</label>
+                                <input type="time" id="end_time" class="form-control">
+                                <div class="invalid-feedback d-block" id="error-end_time"></div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-0">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <label for="location" class="form-label">Local</label>
+                                <input type="text" id="location" class="form-control" required>
+                                <div class="invalid-feedback d-block" id="error-location"></div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="contractor_name" class="form-label">Contratante</label>
+                                <input type="text" id="contractor_name" class="form-control">
+                                <div class="invalid-feedback d-block" id="error-contractor_name"></div>
+                            </div>
+                        </div>
+
+                        <div id="recurrenceFields" class="d-none">
+                            <div class="mb-3">
+                                <label class="form-label d-block">Dias da semana</label>
+                                <div class="day-pills">
+                                    <div class="form-check"><input class="form-check-input recurrence-day"
+                                            type="checkbox" value="1" id="day1"><label class="form-check-label"
+                                            for="day1">Segunda</label></div>
+                                    <div class="form-check"><input class="form-check-input recurrence-day"
+                                            type="checkbox" value="2" id="day2"><label class="form-check-label"
+                                            for="day2">Terca</label></div>
+                                    <div class="form-check"><input class="form-check-input recurrence-day"
+                                            type="checkbox" value="3" id="day3"><label class="form-check-label"
+                                            for="day3">Quarta</label></div>
+                                    <div class="form-check"><input class="form-check-input recurrence-day"
+                                            type="checkbox" value="4" id="day4"><label class="form-check-label"
+                                            for="day4">Quinta</label></div>
+                                    <div class="form-check"><input class="form-check-input recurrence-day"
+                                            type="checkbox" value="5" id="day5"><label class="form-check-label"
+                                            for="day5">Sexta</label></div>
+                                    <div class="form-check"><input class="form-check-input recurrence-day"
+                                            type="checkbox" value="6" id="day6"><label class="form-check-label"
+                                            for="day6">Sabado</label></div>
+                                    <div class="form-check"><input class="form-check-input recurrence-day"
+                                            type="checkbox" value="0" id="day0"><label class="form-check-label"
+                                            for="day0">Domingo</label></div>
+                                </div>
+                                <div class="invalid-feedback d-block" id="error-recurrence_days"></div>
+
+                                <div class="row mt-3">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="recurrence_start_date" class="form-label">Data inicial da
+                                            recorrência</label>
+                                        <input type="date" id="recurrence_start_date" class="form-control">
+                                        <div class="invalid-feedback d-block" id="error-recurrence_start_date"></div>
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label for="recurrence_end_date" class="form-label">Data final da
+                                            recorrência</label>
+                                        <input type="date" id="recurrence_end_date" class="form-control">
+                                        <div class="invalid-feedback d-block" id="error-recurrence_end_date"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h2 class="form-section-title">Valor</h2>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="fee" class="form-label">Cache ou Valor</label>
+                                <input type="number" step="0.01" id="fee" class="form-control">
+                                <div class="invalid-feedback d-block" id="error-fee"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" id="saveButton">Salvar agendamento</button>
+                        <a href="index.html" class="btn btn-secondary">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <script src="../assets/js/auth.js?v=20260427-header4"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="../assets/js/theme.js?v=20260427-header4"></script>
+    <script src="../assets/js/ui.js?v=20260427-header4"></script>
+    <script>
+        const EVENTS_API_URL = 'http://127.0.0.1:8000/api/events';
+        const WORK_TYPES_API_URL = 'http://127.0.0.1:8000/api/work-types';
+
+        function clearEventErrors() {
+            $('#eventForm .form-control, #eventForm .form-select').removeClass('is-invalid');
+
+            [
+                'work_type_id',
+                'schedule_type',
+                'title',
+                'description',
+                'scheduled_date',
+                'status',
+                'start_time',
+                'end_time',
+                'location',
+                'contractor_name',
+                'fee',
+                'recurrence_days',
+                'recurrence_start_date',
+                'recurrence_end_date'
+            ].forEach(function (field) {
+                $(`#error-${field}`).text('');
+            });
+        }
+
+        function setEventFieldError(fieldId, message) {
+            const $field = $(`#${fieldId}`);
+
+            if ($field.length) {
+                $field.addClass('is-invalid');
+            }
+
+            $(`#error-${fieldId}`).text(message);
+        }
+
+        function validateEventForm() {
+            clearEventErrors();
+
+            let isValid = true;
+
+            const workTypeId = $('#work_type_id').val();
+            const scheduleType = $('#schedule_type').val();
+            const title = $('#title').val().trim();
+            const scheduledDate = $('#scheduled_date').val();
+            const status = $('#status').val();
+            const startTime = $('#start_time').val();
+            const location = $('#location').val().trim();
+            const isRecurring = $('#is_recurring').is(':checked');
+
+            if (!workTypeId) {
+                setEventFieldError('work_type_id', 'Selecione um tipo de trabalho.');
+                isValid = false;
+            }
+
+            if (!scheduleType) {
+                setEventFieldError('schedule_type', 'Selecione o tipo de agendamento.');
+                isValid = false;
+            }
+
+            if (!title) {
+                setEventFieldError('title', 'Informe o título do agendamento.');
+                isValid = false;
+            }
+
+            if (!isRecurring && !scheduledDate) {
+                setEventFieldError('scheduled_date', 'Informe a data do agendamento.');
+                isValid = false;
+            }
+
+            if (!status) {
+                setEventFieldError('status', 'Selecione o status.');
+                isValid = false;
+            }
+
+            if (scheduleType === 'evento' && !startTime) {
+                setEventFieldError('start_time', 'A hora inicial é obrigatória para eventos.');
+                isValid = false;
+            }
+
+            if (!location) {
+                setEventFieldError('location', 'Informe o local.');
+                isValid = false;
+            }
+
+            if (isRecurring) {
+                const recurrenceDays = $('.recurrence-day:checked').length;
+                const recurrenceStartDate = $('#recurrence_start_date').val();
+                const recurrenceEndDate = $('#recurrence_end_date').val();
+
+                if (!recurrenceDays) {
+                    setEventFieldError('recurrence_days', 'Selecione pelo menos um dia da semana.');
+                    isValid = false;
+                }
+
+                if (!recurrenceStartDate) {
+                    setEventFieldError('recurrence_start_date', 'Informe a data inicial da recorrência.');
+                    isValid = false;
+                }
+
+                if (!recurrenceEndDate) {
+                    setEventFieldError('recurrence_end_date', 'Informe a data final da recorrência.');
+                    isValid = false;
+                }
+            }
+
+            return isValid;
+        }
+
+        function loadWorkTypes() {
+            $.ajax({
+                url: WORK_TYPES_API_URL,
+                method: 'GET',
+                headers: getAuthHeaders(),
+                success: function (response) {
+                    let options = `<option value="">Selecione</option>`;
+
+                    response.forEach(function (workType) {
+                        options += `<option value="${workType.id}">${workType.name}</option>`;
+                    });
+
+                    $('#work_type_id').html(options);
+                },
+                error: function () {
+                    showAlert('Erro ao carregar os tipos de trabalho.', 'danger');
+                }
+            });
+        }
+
+        function toggleTimeFields() {
+            const scheduleType = $('#schedule_type').val();
+
+            if (scheduleType === 'evento') {
+                $('#timeFieldsWrapper').removeClass('d-none');
+            } else {
+                $('#timeFieldsWrapper').addClass('d-none');
+                $('#start_time').val('');
+                $('#end_time').val('');
+                $('#error-start_time').text('');
+                $('#error-end_time').text('');
+                $('#start_time, #end_time').removeClass('is-invalid');
+            }
+        }
+
+        function getDateFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('date');
+        }
+
+        $(document).on('change', '#schedule_type', function () {
+            toggleTimeFields();
+        });
+
+        $(document).on('change', '#is_recurring', function () {
+            if ($(this).is(':checked')) {
+                $('#recurrenceFields').removeClass('d-none');
+                $('#scheduled_date').prop('disabled', true).val('');
+                $('#error-scheduled_date').text('');
+                $('#scheduled_date').removeClass('is-invalid');
+            } else {
+                $('#recurrenceFields').addClass('d-none');
+                $('#scheduled_date').prop('disabled', false);
+
+                $('#error-recurrence_days').text('');
+                $('#error-recurrence_start_date').text('');
+                $('#error-recurrence_end_date').text('');
+                $('#recurrence_start_date, #recurrence_end_date').removeClass('is-invalid');
+            }
+        });
+
+        $('#eventForm').on('submit', function (e) {
+            e.preventDefault();
+
+            clearEventErrors();
+
+            if (!validateEventForm()) {
+                return;
+            }
+
+            $('#saveButton').prop('disabled', true).text('Salvando...');
+
+            const recurrenceDays = [];
+            $('.recurrence-day:checked').each(function () {
+                recurrenceDays.push($(this).val());
+            });
+
+            const isRecurring = $('#is_recurring').is(':checked');
+
+            const data = {
+                work_type_id: $('#work_type_id').val(),
+                schedule_type: $('#schedule_type').val(),
+                title: $('#title').val(),
+                scheduled_date: $('#scheduled_date').val(),
+                start_time: $('#start_time').val(),
+                end_time: $('#end_time').val(),
+                location: $('#location').val(),
+                contractor_name: $('#contractor_name').val(),
+                description: $('#description').val(),
+                status: $('#status').val(),
+                fee: $('#fee').val(),
+            };
+
+            if (isRecurring) {
+                data.is_recurring = 1;
+                data.recurrence_days = recurrenceDays;
+                data.recurrence_start_date = $('#recurrence_start_date').val();
+                data.recurrence_end_date = $('#recurrence_end_date').val();
+            }
+
+            $.ajax({
+                url: EVENTS_API_URL,
+                method: 'POST',
+                headers: getAuthHeaders(),
+                data: data,
+                success: function (response) {
+                    showAlert(response.message, 'success');
+
+                    setTimeout(function () {
+                        window.location.href = 'index.html';
+                    }, 1000);
+                },
+                error: function (xhr) {
+                    $('#saveButton').prop('disabled', false).text('Salvar agendamento');
+
+                    if (xhr.responseJSON?.errors) {
+                        const errors = xhr.responseJSON.errors;
+
+                        Object.keys(errors).forEach(function (field) {
+                            const message = errors[field][0];
+                            setEventFieldError(field, message);
+                        });
+
+                        showAlert('Corrija os campos destacados.', 'danger');
+                        return;
+                    }
+
+                    if (xhr.responseJSON?.message) {
+                        showAlert(xhr.responseJSON.message, 'danger');
+                        return;
+                    }
+
+                    showAlert('Erro ao cadastrar o agendamento.', 'danger');
+                }
+            });
+        });
+
+        $(document).ready(function () {
+            validateSession(function () {
+                initGlobalUI('events');
+                loadWorkTypes();
+
+                const selectedDate = getDateFromUrl();
+                if (selectedDate) {
+                    $('#scheduled_date').val(selectedDate);
+                }
+
+                toggleTimeFields();
+            });
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

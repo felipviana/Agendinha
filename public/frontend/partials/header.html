@@ -1,0 +1,142 @@
+<nav class="nav-shell">
+    <div class="container">
+        <nav class="navbar navbar-expand-lg navbar-dark">
+            <div class="container">
+                <a class="navbar-brand" href="../dashboard/index.html">
+                    <span class="brand-title">Agendazinha</span>
+                    <span class="brand-subtitle">organizacao leve para uma rotina mais previsivel</span>
+                </a>
+
+                <div class="nav-shortcuts-desktop">
+                    <a class="nav-link" href="../dashboard/index.html" data-page="dashboard">
+                        <span class="ui-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M4 12.5 12 5l8 7.5"></path>
+                                <path d="M6.5 10.5V19h11v-8.5"></path>
+                            </svg>
+                        </span>
+                        <span>Visao Geral</span>
+                    </a>
+
+                    <a class="nav-link" href="../work-types/index.html" data-page="work-types">
+                        <span class="ui-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M5 7.5A2.5 2.5 0 0 1 7.5 5H11l8 8-6 6-8-8Z"></path>
+                                <circle cx="8.5" cy="8.5" r="1"></circle>
+                            </svg>
+                        </span>
+                        <span>Tipos de trabalho</span>
+                    </a>
+
+                    <a class="nav-link" href="../events/index.html" data-page="events">
+                        <span class="ui-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <rect x="3.5" y="5.5" width="17" height="15" rx="2"></rect>
+                                <path d="M7.5 3.5v4M16.5 3.5v4M3.5 9.5h17M8 13h3M13 13h3M8 17h3M13 17h3"></path>
+                            </svg>
+                        </span>
+                        <span>Agendamentos</span>
+                    </a>
+                </div>
+
+                <div class="header-account-desktop">
+                    <span class="header-chip header-chip-user header-account-chip">
+                        <span class="ui-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Z"></path>
+                                <path d="M4.5 19.5a7.5 7.5 0 0 1 15 0"></path>
+                            </svg>
+                        </span>
+                        <span data-logged-user-name>Usuario</span>
+                    </span>
+
+                    <button class="btn btn-outline-light btn-sm logout-button logout-button-desktop" type="button" title="Sair" aria-label="Sair">
+                        <span class="ui-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M10 6.5H7.5A1.5 1.5 0 0 0 6 8v8a1.5 1.5 0 0 0 1.5 1.5H10"></path>
+                                <path d="M13 16.5 18 12l-5-4.5"></path>
+                                <path d="M18 12H9"></path>
+                            </svg>
+                        </span>
+                        <span>Sair</span>
+                    </button>
+                </div>
+
+                <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Abrir menu">
+                    <span class="ui-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M4 7h16"></path>
+                            <path d="M4 12h16"></path>
+                            <path d="M4 17h16"></path>
+                        </svg>
+                    </span>
+                </button>
+
+                <div class="collapse navbar-collapse d-lg-none" id="mainNavbar">
+                    <ul class="navbar-nav mb-2 mb-lg-0 nav-primary-links">
+                        <li class="nav-item">
+                            <a class="nav-link" href="../dashboard/index.html" data-page="dashboard">
+                                <span class="ui-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none">
+                                        <path d="M4 12.5 12 5l8 7.5"></path>
+                                        <path d="M6.5 10.5V19h11v-8.5"></path>
+                                    </svg>
+                                </span>
+                                <span>Visao Geral</span>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" href="../work-types/index.html" data-page="work-types">
+                                <span class="ui-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none">
+                                        <path d="M5 7.5A2.5 2.5 0 0 1 7.5 5H11l8 8-6 6-8-8Z"></path>
+                                        <circle cx="8.5" cy="8.5" r="1"></circle>
+                                    </svg>
+                                </span>
+                                <span>Tipos de trabalho</span>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" href="../events/index.html" data-page="events">
+                                <span class="ui-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none">
+                                        <rect x="3.5" y="5.5" width="17" height="15" rx="2"></rect>
+                                        <path d="M7.5 3.5v4M16.5 3.5v4M3.5 9.5h17M8 13h3M13 13h3M8 17h3M13 17h3"></path>
+                                    </svg>
+                                </span>
+                                <span>Agendamentos</span>
+                            </a>
+                        </li>
+                    </ul>
+
+                    <div class="d-flex align-items-start align-items-lg-center gap-3 flex-column flex-lg-row mt-3 mt-lg-0 nav-user-tools">
+                        <div class="header-chips">
+                            <span class="header-chip header-chip-user">
+                                <span class="ui-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none">
+                                        <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Z"></path>
+                                        <path d="M4.5 19.5a7.5 7.5 0 0 1 15 0"></path>
+                                    </svg>
+                                </span>
+                                <span data-logged-user-name>Usuario</span>
+                            </span>
+                        </div>
+
+                        <button class="btn btn-outline-light btn-sm logout-button" id="logoutButton" type="button">
+                            <span class="ui-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="M10 6.5H7.5A1.5 1.5 0 0 0 6 8v8a1.5 1.5 0 0 0 1.5 1.5H10"></path>
+                                    <path d="M13 16.5 18 12l-5-4.5"></path>
+                                    <path d="M18 12H9"></path>
+                                </svg>
+                            </span>
+                            <span>Sair</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </div>
+</nav>

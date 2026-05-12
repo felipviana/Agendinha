@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Agendamentos</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script>
+        (function () {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/theme.css?v=20260427-header4">
+</head>
+
+<body>
+    <div id="header"></div>
+    <div id="toast-root"></div>
+
+    <main class="container app-shell">
+        <section class="page-hero">
+            <span class="page-eyebrow">Agenda visual</span>
+            <h1 class="page-title">Agendamentos</h1>
+            <p class="page-subtitle">Veja seus compromissos em formato de Lista ou Calendario :)</p>
+            <div class="hero-actions">
+                <div class="view-switch-wrapper">
+                    <span class="view-label" id="listLabel" aria-label="Lista">
+                        <span class="ui-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <path d="M9 6h11M9 12h11M9 18h11"></path>
+                                <circle cx="4.5" cy="6" r="1"></circle>
+                                <circle cx="4.5" cy="12" r="1"></circle>
+                                <circle cx="4.5" cy="18" r="1"></circle>
+                            </svg>
+                        </span>
+                    </span>
+                    <label class="view-switch">
+                        <input type="checkbox" id="viewToggle">
+                        <span class="view-slider"></span>
+                    </label>
+                    <span class="view-label" id="calendarLabel" aria-label="Calendario">
+                        <span class="ui-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <rect x="3.5" y="5.5" width="17" height="15" rx="2"></rect>
+                                <path d="M7.5 3.5v4M16.5 3.5v4M3.5 9.5h17M8 13h3M13 13h3M8 17h3M13 17h3"></path>
+                            </svg>
+                        </span>
+                    </span>
+                </div>
+                <a href="create.html" class="btn btn-primary" id="newEventButton">Novo agendamento</a>
+            </div>
+        </section>
+
+        <div id="listView">
+            <section class="section-card table-shell">
+                <div class="card-body">
+                    <div class="section-heading">
+                        <div>
+                            <div class="section-kicker">Modo lista</div>
+                            <h2 class="section-title">Todos os compromissos em uma grade escaneavel</h2>
+                            <p class="section-copy">Ideal para revisar detalhes, editar rapidamente e decidir o que
+                                precisa de acao.</p>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Titulo</th>
+                                    <th>Categoria</th>
+                                    <th>Tipo</th>
+                                    <th>Recorrencia</th>
+                                    <th>Data</th>
+                                    <th>Horario</th>
+                                    <th>Local</th>
+                                    <th>Status</th>
+                                    <th>Valor</th>
+                                    <th class="events-actions-col">Acoes</th>
+                                </tr>
+                            </thead>
+                            <tbody id="eventsTableBody">
+                                <tr>
+                                    <td colspan="10" class="text-center">Carregando...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div id="calendarView" class="d-none">
+            <section class="section-card calendar-board">
+                <div class="card-body">
+                    <div class="section-heading">
+                        <div>
+                            <div class="section-kicker">Modo calendario</div>
+                            <h2 class="section-title" id="calendarTitle"></h2>
+                            <p class="section-copy">Toque para expandir, arraste para reorganizar e use as cores para
+                                identificar o tipo de trabalho sem precisar ler tudo.</p>
+                        </div>
+                        <div class="calendar-month-nav">
+                            <button class="btn btn-secondary" id="prevMonthBtn">
+                                <span class="btn-text-desktop">Mes anterior</span>
+                                <span class="btn-text-mobile">Anterior</span>
+                            </button>
+                            <button class="btn btn-secondary" id="nextMonthBtn">
+                                <span class="btn-text-desktop">Proximo mes</span>
+                                <span class="btn-text-mobile">Proximo</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="calendar-legend mb-3" id="calendarLegend">
+                        <div class="legend-item"><span class="legend-box legend-today"></span><span>Hoje</span></div>
+                        <div class="legend-item"><span class="legend-box legend-muted"></span><span>Fora do mes</span>
+                        </div>
+                        <div class="legend-item"><span class="legend-box legend-weekend"></span><span>Fim de
+                                semana</span></div>
+                        <div class="legend-item"><span class="legend-pill">Evento</span><span>Agendamento do dia</span>
+                        </div>
+                        <div class="legend-item"><span class="legend-more">+X</span><span>Mais compromissos</span></div>
+                    </div>
+
+                    <div class="support-note mb-3">Dica: pressione e segure um agendamento no celular para ativar o modo
+                        de mover. No desktop, arraste pelo indicador no canto do card.</div>
+                    <div id="calendarContainer"></div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <div class="modal fade" id="dayEventsModal" tabindex="-1" aria-labelledby="dayEventsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="dayEventsModalLabel">Eventos do dia</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="dayEventsModalContent"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../assets/js/auth.js?v=20260427-header4"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="../assets/js/theme.js?v=20260427-header4"></script>
+    <script src="../assets/js/ui.js?v=20260427-header4"></script>
+    <script>
+        const API_URL = 'http://127.0.0.1:8000/api/events';
+
+        let allEvents = [];
+        let currentCalendarDate = new Date();
+        let draggedEventId = null;
+        let longPressTimer = null;
+        let touchMoveMode = false;
+        let touchMoved = false;
+        let suppressNextEventClick = false;
+
+        const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+        const monthNames = [
+            'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+            'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+        ];
+
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+
+            const [year, month, day] = dateString.split('-');
+            return `${day}/${month}/${year}`;
+        }
+
+        function formatFee(value) {
+            if (!value) return '-';
+
+            return Number(value).toLocaleString('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            });
+        }
+
+        function getActionIconSvg(type) {
+            if (type === 'edit') {
+                return `
+                    <span class="ui-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="m4 20 4.2-1 9.4-9.4a2.1 2.1 0 0 0 0-3L16.4 5a2.1 2.1 0 0 0-3 0L4 14.4 3 18.6 4 20Z"></path>
+                            <path d="M12.8 5.6 18.4 11.2"></path>
+                        </svg>
+                    </span>
+                `;
+            }
+
+            if (type === 'series') {
+                return `
+                    <span class="ui-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M5 7.5h10"></path>
+                            <path d="M8 7.5v11a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-11"></path>
+                            <path d="M9.5 4.5h3"></path>
+                            <path d="M17.5 8.5a4.5 4.5 0 1 1-3.3 7.6"></path>
+                            <path d="M17.5 6.5v2h-2"></path>
+                        </svg>
+                    </span>
+                `;
+            }
+
+            return `
+                <span class="ui-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M5 7.5h14"></path>
+                        <path d="M9.5 4.5h5"></path>
+                        <path d="M8 7.5v11a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-11"></path>
+                        <path d="M10 10.5v6M14 10.5v6"></path>
+                    </svg>
+                </span>
+            `;
+        }
+
+        function decorateEventActionButtons() {
+            $('#eventsTableBody a.btn-warning').each(function () {
+                $(this)
+                    .removeClass('btn-warning')
+                    .addClass('action-icon-btn action-icon-btn-edit')
+                    .attr('title', 'Editar agendamento')
+                    .attr('aria-label', 'Editar agendamento')
+                    .html(getActionIconSvg('edit'));
+            });
+
+            $('#eventsTableBody button.btn-delete').each(function () {
+                $(this)
+                    .removeClass('btn-danger')
+                    .addClass('action-icon-btn action-icon-btn-danger')
+                    .attr('title', 'Excluir agendamento')
+                    .attr('aria-label', 'Excluir agendamento')
+                    .html(getActionIconSvg('delete'));
+            });
+
+            $('#eventsTableBody button.btn-delete-series').each(function () {
+                $(this)
+                    .removeClass('btn-secondary')
+                    .addClass('action-icon-btn action-icon-btn-muted')
+                    .attr('title', 'Excluir serie')
+                    .attr('aria-label', 'Excluir serie')
+                    .html(getActionIconSvg('series'));
+            });
+        }
+
+        function getRecurringHtml(event) {
+            if (!event.is_recurring) {
+                return `<span class="badge bg-warning text-dark">Avulso</span>`;
+            }
+
+            const daysMap = {
+                '0': 'Dom',
+                '1': 'Seg',
+                '2': 'Ter',
+                '3': 'Qua',
+                '4': 'Qui',
+                '5': 'Sex',
+                '6': 'Sáb'
+            };
+
+            const days = event.recurrence_days ? event.recurrence_days.split(',') : [];
+            const translatedDays = days.map(day => daysMap[day]).filter(Boolean);
+
+            return `
+                <span class="badge bg-primary">Fixo</span><br>
+                <small>${translatedDays.join(', ')}</small>
+            `;
+        }
+
+        function getStatusHtml(status) {
+            if (status === 'confirmado') {
+                return `<span class="badge bg-success">Confirmado</span>`;
+            }
+
+            if (status === 'pendente') {
+                return `<span class="badge bg-warning text-dark">Pendente</span>`;
+            }
+
+            if (status === 'cancelado') {
+                return `<span class="badge bg-danger">Cancelado</span>`;
+            }
+
+            return `<span class="badge bg-primary">${status ?? '-'}</span>`;
+        }
+
+        function getWorkTypeHtml(event) {
+            const workType = event.work_type ?? event.workType;
+
+            if (!workType) {
+                return '-';
+            }
+
+            const color = workType.color ?? '#3B82F6';
+            const name = workType.name ?? 'Sem tipo';
+
+            return `
+                <span style="
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 8px;
+                    background: ${color};
+                    color: #ffffff;
+                    padding: 6px 10px;
+                    border-radius: 999px;
+                    font-size: 12px;
+                    font-weight: bold;
+                ">
+                    <span style="
+                        display: inline-block;
+                        width: 10px;
+                        height: 10px;
+                        background: rgba(255,255,255,0.85);
+                        border-radius: 50%;
+                    "></span>
+                    ${name}
+                </span>
+            `;
+        }
+
+        function formatDateToYmd(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+
+            return `${year}-${month}-${day}`;
+        }
+
+        function groupEventsByDate(events) {
+            const grouped = {};
+
+            events.forEach(event => {
+                if (!event.scheduled_date) return;
+
+                if (!grouped[event.scheduled_date]) {
+                    grouped[event.scheduled_date] = [];
+                }
+
+                grouped[event.scheduled_date].push(event);
+            });
+
+            return grouped;
+        }
+
+        function renderCalendar() {
+            const year = currentCalendarDate.getFullYear();
+            const month = currentCalendarDate.getMonth();
+
+            $('#calendarTitle').text(`${monthNames[month]} de ${year}`);
+
+            const firstDayOfMonth = new Date(year, month, 1);
+            const lastDayOfMonth = new Date(year, month + 1, 0);
+
+            const startCalendar = new Date(firstDayOfMonth);
+            startCalendar.setDate(firstDayOfMonth.getDate() - firstDayOfMonth.getDay());
+
+            const endCalendar = new Date(lastDayOfMonth);
+            endCalendar.setDate(lastDayOfMonth.getDate() + (6 - lastDayOfMonth.getDay()));
+
+            const groupedEvents = groupEventsByDate(allEvents);
+            const todayString = formatDateToYmd(new Date());
+
+            let html = '';
+            let currentDate = new Date(startCalendar);
+
+            while (currentDate <= endCalendar) {
+                const dateString = formatDateToYmd(currentDate);
+                const dayEvents = groupedEvents[dateString] || [];
+                const isCurrentMonth = currentDate.getMonth() === month;
+                const isToday = dateString === todayString;
+                const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
+
+                const visibleEvents = dayEvents.slice(0, 3);
+                const hiddenCount = dayEvents.length - visibleEvents.length;
+
+                html += `
+                    <div class="calendar-day 
+                                ${isCurrentMonth ? '' : 'calendar-day-muted'} 
+                                ${isToday ? 'calendar-day-today' : ''} 
+                                ${isWeekend ? 'calendar-day-weekend' : ''}"
+                         data-date="${dateString}">
+                        
+                        ${isCurrentMonth && dayEvents.length === 0 ? `
+                            <button class="calendar-add-btn" data-date="${dateString}" title="Novo agendamento">
+                                +
+                            </button>
+                        ` : ''}
+
+                        <div class="calendar-date ${isToday ? 'calendar-date-today' : ''}">
+                            ${currentDate.getDate()}
+                        </div>
+                `;
+
+                visibleEvents.forEach(event => {
+                    const workType = event.work_type ?? event.workType;
+                    const color = workType?.color ?? '#3B82F6';
+
+                    const feeText = event.fee ? formatFee(event.fee) : '-';
+                    const contractorText = event.contractor_name ?? '-';
+
+                    html += `
+                        <div class="calendar-event"
+                            style="background: ${color};"
+                            data-id="${event.id}"
+                            data-expanded="false"
+                            draggable="false"
+                            title="${event.title ?? ''} - ${event.start_time ?? ''}">
+                            
+                            <div class="calendar-event-drag-handle"
+                                data-id="${event.id}"
+                                draggable="true"
+                                title="Arrastar agendamento">⋮⋮</div>
+
+                            <div class="calendar-event-main">
+                                <div class="calendar-event-title">${event.title ?? '-'}</div>
+                                <small>${event.start_time ?? ''}</small>
+                            </div>
+
+                            <div class="calendar-event-details">
+                                <div><strong>Título:</strong> ${event.title ?? '-'}</div>
+                                <div><strong>Contratante:</strong> ${contractorText}</div>
+                                <div><strong>Valor:</strong> ${feeText}</div>
+                                <div><strong>Hora:</strong> ${event.start_time ?? '-'}${event.end_time ? ' - ' + event.end_time : ''}</div>
+
+                                <div class="calendar-event-actions mt-2">
+                                    <a href="edit.html?id=${event.id}" class="calendar-edit-btn" title="Editar agendamento" aria-label="Editar agendamento">&#9998;</a>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                if (hiddenCount > 0) {
+                    html += `
+                        <div class="calendar-more" data-date="${dateString}">
+                            +${hiddenCount} evento(s)
+                        </div>
+                    `;
+                }
+
+                html += `</div>`;
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+
+            $('#calendarContainer').html(`
+                <div class="calendar-scroll-hint left"></div>
+                <div class="calendar-scroll-hint right"></div>
+
+                <div class="calendar-scroll-wrapper" id="calendarScrollWrapper">
+                    <div class="calendar-grid-header">
+                        ${weekDays.map((day, index) => {
+                const isWeekend = index === 0 || index === 6;
+                return `<div class="calendar-weekday ${isWeekend ? 'calendar-weekday-weekend' : ''}">${day}</div>`;
+            }).join('')}
+                    </div>
+
+                    <div class="calendar-grid-body">
+                        ${html}
+                    </div>
+                </div>
+            `);
+
+            updateCalendarScrollHints();
+        }
+
+        function showDayEvents(dateString) {
+            const groupedEvents = groupEventsByDate(allEvents);
+            const dayEvents = groupedEvents[dateString] || [];
+
+            const [year, month, day] = dateString.split('-');
+            $('#dayEventsModalLabel').text(`Eventos de ${day}/${month}/${year}`);
+
+            if (dayEvents.length === 0) {
+                $('#dayEventsModalContent').html(`
+                    <div class="alert alert-info mb-0">Nenhum evento encontrado para este dia.</div>
+                `);
+            } else {
+                let html = '<div class="d-flex flex-column gap-2">';
+
+                dayEvents.forEach(event => {
+                    const workType = event.work_type ?? event.workType;
+                    const color = workType?.color ?? '#3B82F6';
+                    const workTypeName = workType?.name ?? 'Sem tipo';
+
+                    html += `
+                        <div class="border rounded p-3" style="border-left: 6px solid ${color} !important;">
+                            <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
+                                <div>
+                                    <h6 class="mb-1">${event.title ?? '-'}</h6>
+                                    <div><strong>Tipo de trabalho:</strong> ${workTypeName}</div>
+                                    <div><strong>Tipo:</strong> ${event.schedule_type ?? '-'}</div>
+                                    <div><strong>Horário:</strong> ${event.start_time ?? '-'}${event.end_time ? ' - ' + event.end_time : ''}</div>
+                                    <div><strong>Local:</strong> ${event.location ?? '-'}</div>
+                                    <div><strong>Status:</strong> ${event.status ?? '-'}</div>
+                                    <div><strong>Contratante:</strong> ${event.contractor_name ?? '-'}</div>
+                                    <div><strong>Cachê:</strong> ${formatFee(event.fee)}</div>
+                                </div>
+                                <div>
+                                    <a href="edit.html?id=${event.id}" class="btn btn-warning btn-sm">Editar</a>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += '</div>';
+                $('#dayEventsModalContent').html(html);
+            }
+
+            const modal = new bootstrap.Modal(document.getElementById('dayEventsModal'));
+            modal.show();
+        }
+
+        function moveEventDate(eventId, newDate) {
+            $.ajax({
+                url: `${API_URL}/${eventId}/move-date`,
+                method: 'PATCH',
+                headers: getAuthHeaders(),
+                data: {
+                    scheduled_date: newDate
+                },
+                success: function (response) {
+                    showAlert(response.message, 'success');
+                    loadEvents();
+                },
+                error: function (xhr) {
+                    const message = xhr.responseJSON?.message || 'Erro ao mover o agendamento.';
+                    showAlert(message, 'danger');
+                }
+            });
+        }
+
+        function activateTouchMoveMode(eventId) {
+            draggedEventId = eventId;
+            touchMoveMode = true;
+
+            $('body').addClass('touch-move-active');
+            $('#calendarContainer').addClass('touch-move-active');
+
+            $('.calendar-event').removeClass('touch-selected');
+            $(`.calendar-event[data-id="${eventId}"]`).addClass('touch-selected');
+
+            showAlert('Modo mover ativado. Toque em outro dia para mover o agendamento.', 'info');
+        }
+
+        function resetTouchMoveMode() {
+            draggedEventId = null;
+            touchMoveMode = false;
+            touchMoved = false;
+            clearTimeout(longPressTimer);
+
+            $('body').removeClass('touch-move-active');
+            $('#calendarContainer').removeClass('touch-move-active');
+
+            $('.calendar-event').removeClass('touch-selected');
+            $('.calendar-day').removeClass('calendar-day-drop-target');
+        }
+
+        function loadEvents() {
+            $.ajax({
+                url: API_URL,
+                method: 'GET',
+                headers: getAuthHeaders(),
+                success: function (response) {
+                    allEvents = response;
+
+                    let rows = '';
+
+                    if (response.length === 0) {
+                        rows = `
+                            <tr>
+                                <td colspan="10" class="text-center">Nenhum agendamento cadastrado.</td>
+                            </tr>
+                        `;
+                    } else {
+                        response.forEach(function (event) {
+                            rows += `
+                                <tr>
+                                    <td>${event.title ?? '-'}</td>
+                                    <td>${getWorkTypeHtml(event)}</td>
+                                    <td>${event.schedule_type ? event.schedule_type.charAt(0).toUpperCase() + event.schedule_type.slice(1) : '-'}</td>
+                                    <td>${getRecurringHtml(event)}</td>
+                                    <td>${formatDate(event.scheduled_date)}</td>
+                                    <td>
+                                        ${event.start_time ?? '-'}
+                                        ${event.end_time ? ' - ' + event.end_time : ''}
+                                    </td>
+                                    <td>${event.location ?? '-'}</td>
+                                    <td>${getStatusHtml(event.status)}</td>
+                                    <td>${formatFee(event.fee)}</td>
+                                    <td class="events-actions-col">
+                                        <div class="event-actions-cell">
+                                            <a href="edit.html?id=${event.id}" class="btn action-icon-btn action-icon-btn-edit btn-sm" title="Editar agendamento" aria-label="Editar agendamento"><span class="ui-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m4 20 4.2-1 9.4-9.4a2.1 2.1 0 0 0 0-3L16.4 5a2.1 2.1 0 0 0-3 0L4 14.4 3 18.6 4 20Z"></path><path d="M12.8 5.6 18.4 11.2"></path></svg></span></a>
+                                            <button class="btn action-icon-btn action-icon-btn-danger btn-sm btn-delete" data-id="${event.id}" title="Excluir agendamento" aria-label="Excluir agendamento"><span class="ui-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 7.5h14"></path><path d="M9.5 4.5h5"></path><path d="M8 7.5v11a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-11"></path><path d="M10 10.5v6M14 10.5v6"></path></svg></span></button>
+                                            ${event.is_recurring ? `<button class="btn btn-secondary btn-sm btn-delete-series" data-id="${event.id}">Excluir Série</button>` : ''}
+                                        </div>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                    }
+
+                    $('#eventsTableBody').html(rows);
+                    decorateEventActionButtons();
+                    renderCalendar();
+                },
+                error: function (xhr) {
+                    const message = xhr.responseJSON?.message || 'Erro ao carregar os agendamentos.';
+
+                    $('#eventsTableBody').html(`
+                        <tr>
+                            <td colspan="10" class="text-center text-danger">
+                                ${message}
+                            </td>
+                        </tr>
+                    `);
+
+                    showAlert(message, 'danger');
+                }
+            });
+        }
+
+        function updateCalendarScrollHints() {
+            const wrapper = document.getElementById('calendarScrollWrapper');
+            if (!wrapper) return;
+
+            const leftHint = document.querySelector('.calendar-scroll-hint.left');
+            const rightHint = document.querySelector('.calendar-scroll-hint.right');
+
+            const maxScrollLeft = wrapper.scrollWidth - wrapper.clientWidth;
+
+            if (leftHint) {
+                leftHint.classList.toggle('visible', wrapper.scrollLeft > 5);
+            }
+
+            if (rightHint) {
+                rightHint.classList.toggle('visible', wrapper.scrollLeft < maxScrollLeft - 5);
+            }
+        }
+
+        $(document).on('scroll', '#calendarScrollWrapper', function () {
+            updateCalendarScrollHints();
+        });
+
+        $(document).on('click', '.calendar-more', function () {
+            const date = $(this).data('date');
+            if (!date) return;
+            showDayEvents(date);
+        });
+
+        $(document).on('click', '.btn-delete', function () {
+            const id = $(this).data('id');
+
+            if (!confirm('Deseja excluir este agendamento?')) {
+                return;
+            }
+
+            $.ajax({
+                url: `${API_URL}/${id}`,
+                method: 'DELETE',
+                headers: getAuthHeaders(),
+                success: function (response) {
+                    showAlert(response.message, 'success');
+                    loadEvents();
+                },
+                error: function (xhr) {
+                    const message = xhr.responseJSON?.message || 'Erro ao excluir o agendamento.';
+                    showAlert(message, 'danger');
+                }
+            });
+        });
+
+        $(document).on('click', '.btn-delete-series', function () {
+            const id = $(this).data('id');
+
+            if (!confirm('Deseja excluir toda a série deste agendamento?')) {
+                return;
+            }
+
+            $.ajax({
+                url: `${API_URL}/${id}/destroy-series`,
+                method: 'DELETE',
+                headers: getAuthHeaders(),
+                success: function (response) {
+                    showAlert(response.message, 'success');
+                    loadEvents();
+                },
+                error: function (xhr) {
+                    const message = xhr.responseJSON?.message || 'Erro ao excluir a série.';
+                    showAlert(message, 'danger');
+                }
+            });
+        });
+
+        function setView(view) {
+            if (view === 'calendar') {
+                $('#calendarView').removeClass('d-none');
+                $('#listView').addClass('d-none');
+                $('#viewToggle').prop('checked', true);
+                $('#newEventButton').addClass('d-none');
+                renderCalendar();
+            } else {
+                $('#listView').removeClass('d-none');
+                $('#calendarView').addClass('d-none');
+                $('#viewToggle').prop('checked', false);
+                $('#newEventButton').removeClass('d-none');
+            }
+        }
+
+        $(document).on('change', '#viewToggle', function () {
+            const view = $(this).is(':checked') ? 'calendar' : 'list';
+            setView(view);
+        });
+
+        $('#prevMonthBtn').on('click', function () {
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
+            renderCalendar();
+        });
+
+        $('#nextMonthBtn').on('click', function () {
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
+            renderCalendar();
+        });
+
+        $(document).on('click', '.calendar-add-btn', function (e) {
+            e.stopPropagation();
+            e.preventDefault();
+
+            if (touchMoveMode) {
+                return;
+            }
+
+            const date = $(this).data('date');
+            if (!date) return;
+
+            window.location.href = `create.html?date=${date}`;
+        });
+
+        $(document).on('dragstart', '.calendar-event-drag-handle', function (e) {
+            const eventId = $(this).data('id');
+            const $eventCard = $(this).closest('.calendar-event');
+
+            if (!eventId) return;
+
+            draggedEventId = eventId;
+
+            e.originalEvent.dataTransfer.setData('text/plain', eventId);
+            e.originalEvent.dataTransfer.effectAllowed = 'move';
+
+            $eventCard.addClass('dragging');
+        });
+
+        $(document).on('dragstart', '.calendar-event', function (e) {
+            if ($(e.target).closest('.calendar-event-drag-handle').length) {
+                return;
+            }
+
+            e.preventDefault();
+        });
+
+        $(document).on('dragend', '.calendar-event-drag-handle', function () {
+            $(this).closest('.calendar-event').removeClass('dragging');
+            $('.calendar-day').removeClass('calendar-day-drop-target');
+            draggedEventId = null;
+        });
+
+        $(document).on('dragover', '.calendar-day', function (e) {
+            e.preventDefault();
+            e.originalEvent.dataTransfer.dropEffect = 'move';
+            $(this).addClass('calendar-day-drop-target');
+        });
+
+        $(document).on('dragleave', '.calendar-day', function () {
+            $(this).removeClass('calendar-day-drop-target');
+        });
+
+        $(document).on('drop', '.calendar-day', function (e) {
+            e.preventDefault();
+            $(this).removeClass('calendar-day-drop-target');
+
+            const newDate = $(this).data('date');
+            const transferredId = e.originalEvent.dataTransfer.getData('text/plain');
+            const eventId = transferredId || draggedEventId;
+
+            if (!eventId || !newDate) {
+                draggedEventId = null;
+                return;
+            }
+
+            moveEventDate(eventId, newDate);
+            draggedEventId = null;
+        });
+
+        $(document).on('touchstart', '.calendar-event', function (e) {
+            if ($(e.target).closest('.calendar-edit-btn').length) {
+                return;
+            }
+
+            if ($(e.target).closest('.calendar-event-drag-handle').length) {
+                return;
+            }
+
+            const eventId = $(this).data('id');
+            touchMoved = false;
+
+            clearTimeout(longPressTimer);
+
+            longPressTimer = setTimeout(() => {
+                activateTouchMoveMode(eventId);
+            }, 500);
+        });
+
+        $(document).on('touchmove', '.calendar-event', function () {
+            touchMoved = true;
+            clearTimeout(longPressTimer);
+        });
+
+        $(document).on('touchend touchcancel', '.calendar-event', function (e) {
+            clearTimeout(longPressTimer);
+
+            if (touchMoveMode) {
+                return;
+            }
+
+            if (touchMoved) {
+                return;
+            }
+
+            if ($(e.target).closest('.calendar-edit-btn').length) {
+                return;
+            }
+
+            if ($(e.target).closest('.calendar-event-drag-handle').length) {
+                return;
+            }
+
+            const $event = $(this);
+
+            $('.calendar-event.expanded').not($event).removeClass('expanded').attr('data-expanded', 'false');
+
+            const isExpanded = $event.attr('data-expanded') === 'true';
+
+            if (isExpanded) {
+                $event.removeClass('expanded').attr('data-expanded', 'false');
+            } else {
+                $event.addClass('expanded').attr('data-expanded', 'true');
+            }
+
+            suppressNextEventClick = true;
+        });
+
+        $(document).on('click', '.calendar-day', function (e) {
+            if (!touchMoveMode || !draggedEventId) {
+                return;
+            }
+
+            if ($(e.target).closest('.calendar-event').length) {
+                return;
+            }
+
+            if ($(e.target).closest('.calendar-add-btn').length) {
+                return;
+            }
+
+            if ($(e.target).closest('.calendar-more').length) {
+                return;
+            }
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            const newDate = $(this).data('date');
+
+            if (!newDate) {
+                resetTouchMoveMode();
+                return;
+            }
+
+            moveEventDate(draggedEventId, newDate);
+
+            setTimeout(() => {
+                resetTouchMoveMode();
+            }, 80);
+        });
+
+        $(document).on('touchstart', function (e) {
+            if (!touchMoveMode) return;
+
+            const touchedCalendarEvent = $(e.target).closest('.calendar-event').length > 0;
+            const touchedCalendarDay = $(e.target).closest('.calendar-day').length > 0;
+
+            if (!touchedCalendarEvent && !touchedCalendarDay) {
+                resetTouchMoveMode();
+            }
+        });
+
+        $(document).on('click', '.calendar-event', function (e) {
+            if (suppressNextEventClick) {
+                suppressNextEventClick = false;
+                return;
+            }
+
+            if (touchMoveMode) {
+                return;
+            }
+
+            if ($(this).hasClass('dragging')) {
+                return;
+            }
+
+            if ($(e.target).closest('.calendar-edit-btn').length) {
+                return;
+            }
+
+            if ($(e.target).closest('.calendar-event-drag-handle').length) {
+                return;
+            }
+
+            const $event = $(this);
+
+            $('.calendar-event.expanded').not($event).removeClass('expanded').attr('data-expanded', 'false');
+
+            const isExpanded = $event.attr('data-expanded') === 'true';
+
+            if (isExpanded) {
+                $event.removeClass('expanded').attr('data-expanded', 'false');
+            } else {
+                $event.addClass('expanded').attr('data-expanded', 'true');
+            }
+        });
+
+        $(document).ready(function () {
+            validateSession(function () {
+                initGlobalUI('events');
+                loadEvents();
+                setView('list');
+            });
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+        <div id="appToast" class="toast align-items-center border-0" role="alert" aria-live="assertive"
+            aria-atomic="true">
+            <div class="d-flex">
+                <div id="appToastBody" class="toast-body">
+                    Mensagem aqui
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                    aria-label="Fechar"></button>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
