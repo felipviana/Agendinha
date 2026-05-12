@@ -56,7 +56,7 @@ function getHeaderTemplate() {
             <div class="container">
                 <div class="app-header-inner">
                     <a class="app-header-brand" href="../dashboard/index.html" aria-label="AgendaFlow">
-                        <span class="brand-title">Agendazinha</span>
+                        <span class="brand-title">Agendinha</span>
                         <span class="brand-subtitle">organizacao leve para uma rotina mais previsivel</span>
                     </a>
 
