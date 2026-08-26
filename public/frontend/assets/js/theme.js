@@ -18,6 +18,7 @@ function applyTheme(theme) {
         globalToggleButton.classList.toggle('is-dark', isDark);
         globalToggleButton.setAttribute('aria-pressed', isDark ? 'true' : 'false');
         globalToggleButton.setAttribute('title', isDark ? 'Ativar tema claro' : 'Ativar tema escuro');
+        globalToggleButton.setAttribute('aria-label', isDark ? 'Ativar tema claro' : 'Ativar tema escuro');
     }
 }
 

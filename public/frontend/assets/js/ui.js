@@ -24,17 +24,6 @@ function initGlobalUI(activePage) {
         }
     });
 
-    if (!document.getElementById('globalThemeToggleButton')) {
-        const themeButton = document.createElement('button');
-        themeButton.id = 'globalThemeToggleButton';
-        themeButton.type = 'button';
-        themeButton.className = 'global-theme-toggle-button';
-        themeButton.setAttribute('aria-label', 'Alternar tema');
-        themeButton.setAttribute('title', 'Alternar tema');
-        themeButton.innerHTML = '<span class="theme-toggle-icon theme-toggle-icon-sun" aria-hidden="true"><span class="ui-icon"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4.5"></circle><path d="M12 2.5v2.5M12 19v2.5M21.5 12H19M5 12H2.5M18.7 5.3l-1.8 1.8M7.1 16.9l-1.8 1.8M18.7 18.7l-1.8-1.8M7.1 7.1 5.3 5.3"></path></svg></span></span><span class="theme-toggle-icon theme-toggle-icon-moon" aria-hidden="true"><span class="ui-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M20 14.2A8.5 8.5 0 0 1 9.8 4 8.5 8.5 0 1 0 20 14.2Z"></path></svg></span></span><span class="theme-toggle-label">Tema</span>';
-        document.body.appendChild(themeButton);
-    }
-
     if (typeof applyTheme === 'function') {
         applyTheme(localStorage.getItem('theme') || 'light');
     }
@@ -79,6 +68,15 @@ function getHeaderTemplate() {
                             </span>
                             <span>Tipos de trabalho</span>
                         </a>
+                        <a class="app-header-link" href="../reports/index.html" data-page="reports">
+                            <span class="ui-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path d="M4.5 19.5V11.5M10.5 19.5V4.5M16.5 19.5v-6"></path>
+                                    <path d="M3 19.5h18"></path>
+                                </svg>
+                            </span>
+                            <span>Relat&oacute;rios</span>
+                        </a>
                     </nav>
 
                     <div class="app-header-account" aria-label="Conta do usuario">
@@ -106,6 +104,24 @@ function getHeaderTemplate() {
                 </div>
             </div>
         </header>
+
+        <button id="globalThemeToggleButton" class="global-theme-toggle-button" type="button" aria-label="Ativar tema escuro" aria-pressed="false" title="Ativar tema escuro">
+            <span class="theme-toggle-icon theme-toggle-icon-sun" aria-hidden="true">
+                <span class="ui-icon">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="4.5"></circle>
+                        <path d="M12 2.5v2.5M12 19v2.5M21.5 12H19M5 12H2.5M18.7 5.3l-1.8 1.8M7.1 16.9l-1.8 1.8M18.7 18.7l-1.8-1.8M7.1 7.1 5.3 5.3"></path>
+                    </svg>
+                </span>
+            </span>
+            <span class="theme-toggle-icon theme-toggle-icon-moon" aria-hidden="true">
+                <span class="ui-icon">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M20 14.2A8.5 8.5 0 0 1 9.8 4 8.5 8.5 0 1 0 20 14.2Z"></path>
+                    </svg>
+                </span>
+            </span>
+        </button>
     `;
 }
 

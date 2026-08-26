@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\WorkTypeApiController;
 use App\Http\Controllers\Api\EventApiController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\PasswordResetController;
+use App\Http\Controllers\Api\ReportApiController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -37,5 +38,6 @@ Route::middleware('auth:sanctum')->group(function(){
     Route::delete('events/{event}/destroy-series', [EventApiController::class, 'destroySeries']);
     Route::get('dashboard', [EventApiController::class, 'dashboard']);
     Route::patch('events/{event}/move-date', [EventApiController::class, 'moveDate']);
+    Route::get('reports', [ReportApiController::class, 'index']);
 
 });
